@@ -1,0 +1,13 @@
+code,name,descr,lang_code,is_active,cr_by,cr_dtimes
+MNA,Manual Adjudication,Rejection during Manual Adjudication,eng,TRUE,superadmin,now()
+CLR,Client Rejection,Rejection in Registration Client,eng,TRUE,superadmin,now()
+MNA,الفصل اليدوي,رفض خلال الفصل اليدوي,ara,TRUE,superadmin,now()
+CLR,رفض العميل,رفض تسجيل العميل,ara,TRUE,superadmin,now()
+MNA,Manuel arbitrage,Renvoi en cours de sélection manuelle,fra,TRUE,superadmin,now()
+CLR,Rejet de client,Rejet en enregistrement Client,fra,TRUE,superadmin,now()
+MNA,मैनुअल अधिनिर्णय,मैनुअल अधिनिर्णय दौरान अस्वीकृति,hin,TRUE,superadmin,now()
+CLR,क्लाइंट अस्वीकृति,पंजीकरण क्लाइंट में अस्वीकृति,hin,TRUE,superadmin,now()
+MNA,கையேடு வழக்குளில் தீர்ப்பு,கையேடு வழக்குளில் தீர்ப்பு போது நிராகரித்தல்,tam,TRUE,superadmin,now()
+CLR,கிளையண்ட் நிராகரித்தல்,பதிவு கிளையண்ட் உள்ள நிராகரித்தல்,tam,TRUE,superadmin,now()
+MNA,ಮ್ಯಾನುಯಲ್ ತೀರ್ಪು,ಮ್ಯಾನುಯಲ್ ತೀರ್ಪು ಸಮಯದಲ್ಲಿ ತಿರಸ್ಕಾರ,kan,TRUE,superadmin,now()
+CLR,ಕ್ಲೈಂಟ್ ತಿರಸ್ಕಾರ,ನೋಂದಣಿ ಕ್ಲೈಂಟ್ ರಲ್ಲಿ ತಿರಸ್ಕಾರ,kan,TRUE,superadmin,now()

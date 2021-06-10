@@ -1,0 +1,13 @@
+code,descr,sttyp_code,lang_code,is_active,cr_by,cr_dtimes
+ACT,Activated,ADT,eng,TRUE,superadmin,now()
+DCT,Deactivated,ADT,eng,TRUE,superadmin,now()
+ACT,activated,ADT,fra,TRUE,superadmin,now()
+DCT,disabled,ADT,fra,TRUE,superadmin,now()
+ACT,مفعل,ADT,ara,TRUE,superadmin,now()
+DCT,إبطال مفعولها,ADT,ara,TRUE,superadmin,now()
+ACT,सक्रिय,ADT,hin,TRUE,superadmin,now()
+DCT,निष्क्रिय,ADT,hin,TRUE,superadmin,now()
+ACT,இயக்கப்பட்டது,ADT,tam,TRUE,superadmin,now()
+DCT,செயலிழக்கச் செய்யப்பட்டு,ADT,tam,TRUE,superadmin,now()
+ACT,ಸಕ್ರಿಯ,ADT,kan,TRUE,superadmin,now()
+DCT,ನಿಷ್ಕ್ರಿಯಗೊಂಡಿದೆ,ADT,kan,TRUE,superadmin,now()
