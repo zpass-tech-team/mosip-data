@@ -1,0 +1,13 @@
+code,name,lang_code,is_active,cr_by,cr_dtimes
+FR,Foreigner,eng,TRUE,superadmin,now()
+NFR,Non-Foreigner,eng,TRUE,superadmin,now()
+FR,أجنبي,ara,TRUE,superadmin,now()
+NFR,غير أجنبي,ara,TRUE,superadmin,now()
+FR,Étranger,fra,TRUE,superadmin,now()
+NFR,Non-étranger,fra,TRUE,superadmin,now()
+FR,परदेशी,hin,TRUE,superadmin,now()
+NFR,गैर Foreigner,hin,TRUE,superadmin,now()
+FR,வெளிநாட்டவர்,tam,TRUE,superadmin,now()
+NFR,அல்லாத வெளிநாட்டவர்,tam,TRUE,superadmin,now()
+FR,ಫಾರಿನರ್,kan,TRUE,superadmin,now()
+NFR,ಅಲ್ಲದ ಫಾರಿನರ್,kan,TRUE,superadmin,now()

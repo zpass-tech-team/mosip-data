@@ -1,0 +1,7 @@
+code,name,descr,lang_code,is_active,cr_by,cr_dtimes
+REG,Regular,Regular Registration Center,eng,TRUE,superadmin,now()
+REG,منتظم,مركز التسجيل العادي,ara,TRUE,superadmin,now()
+REG,Ordinaire,Centre dinscription régulière,fra,TRUE,superadmin,now()
+REG,नियमित,नियमित रूप से पंजीकरण केंद्र,hin,TRUE,superadmin,now()
+REG,வழக்கமான,வழக்கமான பதிவு மையம்,tam,TRUE,superadmin,now()
+REG,ನಿಯಮಿತ,ನಿಯಮಿತ ನೋಂದಣಿ ಕೇಂದ್ರ,kan,TRUE,superadmin,now()
