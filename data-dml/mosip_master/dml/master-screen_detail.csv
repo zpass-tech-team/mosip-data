@@ -1,4 +1,4 @@
-﻿id,app_id,name,descr,lang_code,is_active,cr_by,cr_dtimes
+id,app_id,name,descr,lang_code,is_active,cr_by,cr_dtimes
 approveRegistrationRoot,10003,approveRegistrationRoot,approveRegistrationRoot,eng,TRUE,superadmin,now()
 loginRoot,10003,loginRoot,loginRoot,eng,TRUE,superadmin,now()
 lostUINRoot,10003,lostUINRoot,lostUINRoot,eng,TRUE,superadmin,now()
@@ -15,3 +15,4 @@ syncClientServerRoot,10003,syncClientServerRoot,syncClientServerRoot,eng,TRUE,su
 eodRoot,10003,eodroot,eodroot,eng,TRUE,superadmin,now()
 reRegisterRoot,10003,reRegisterRoot,reRegisterRoot,eng,TRUE,superadmin,now()
 uploadPacketRoot,10003,uploadPacketRoot,uploadPacketRoot,eng,TRUE,superadmin,now()
+correctionRoot,10003,correctionRoot,correctionRoot,eng,TRUE,superadmin,now()
