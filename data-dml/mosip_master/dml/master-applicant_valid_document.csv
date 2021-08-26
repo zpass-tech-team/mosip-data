@@ -1,4 +1,8 @@
 ﻿apptyp_code,doccat_code,doctyp_code,lang_code,is_active,cr_by,cr_dtimes
+000,POI,CIN,eng,TRUE,superadmin,now()
+000,POA,RNC,eng,TRUE,superadmin,now()
+000,POB,COB,eng,TRUE,superadmin,now()
+000,POR,CRN,eng,TRUE,superadmin,now()
 001,POI,CIN,eng,TRUE,superadmin,now()
 001,POA,RNC,eng,TRUE,superadmin,now()
 001,POB,COB,eng,TRUE,superadmin,now()
