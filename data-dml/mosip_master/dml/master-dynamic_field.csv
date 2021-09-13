@@ -464,3 +464,12 @@ id,name,description,data_type,value_json,lang_code,is_active,cr_by,cr_dtimes
 		""code"": ""NFR"",
 		""value"": ""Non-étranger""
 	}",fra,TRUE,superadmin,now()
+10310,preferredLang,user preferred Language,string,"{""value"":""English"",""code"":""eng""}",eng,TRUE,superadmin,now()
+10312,preferredLang,user preferred Language,string,"{""value"":""العَرَبِيَّة"",""code"":""ara""}",eng,TRUE,superadmin,now()
+10313,preferredLang,user preferred Language,string,"{""value"":""français"",""code"":""fra""}",eng,TRUE,superadmin,now()
+10314,preferredLang,يفضل المستخدم اللغة,string,"{""value"":""English"",""code"":""eng""}",ara,TRUE,superadmin,now()
+10315,preferredLang,يفضل المستخدم اللغة,string,"{""value"":""العَرَبِيَّة"",""code"":""ara""}",ara,TRUE,superadmin,now()
+10316,preferredLang,يفضل المستخدم اللغة,string,"{""value"":""français"",""code"":""fra""}",ara,TRUE,superadmin,now()
+10317,preferredLang,Langue préférée de l'utilisateur,string,"{""value"":""English"",""code"":""eng""}",fra,TRUE,superadmin,now()
+10318,preferredLang,Langue préférée de l'utilisateur,string,"{""value"":""العَرَبِيَّة"",""code"":""ara""}",fra,TRUE,superadmin,now()
+10319,preferredLang,Langue préférée de l'utilisateur,string,"{""value"":""français"",""code"":""fra""}",fra,TRUE,superadmin,now()
