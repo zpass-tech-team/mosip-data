@@ -253,7 +253,7 @@ TRUNCATE TABLE master.screen_authorization cascade ;
 ----- TRUNCATE master.user_detail TABLE Data and It's reference Data and COPY Data from CSV file -----
 TRUNCATE TABLE master.user_detail cascade ;
 
-\COPY master.user_detail (id,uin,name,email,mobile,status_code,regcntr_id,lang_code,last_login_method,is_active,cr_by,cr_dtimes) FROM './dml/master-user_detail.csv' delimiter ',' HEADER  csv;
+\COPY master.user_detail (id,name,status_code,regcntr_id,lang_code,last_login_method,is_active,cr_by,cr_dtimes) FROM './dml/master-user_detail.csv' delimiter ',' HEADER  csv;
 
 
 ----- TRUNCATE master.reg_working_nonworking TABLE Data and It's reference Data and COPY Data from CSV file -----
@@ -296,7 +296,7 @@ TRUNCATE TABLE master.ui_spec cascade ;
 ----- TRUNCATE master.user_detail_h TABLE Data and It's reference Data and COPY Data from CSV file -----
 TRUNCATE TABLE master.user_detail_h cascade ;
 
-\COPY master.user_detail_h (id,uin,name,email,mobile,status_code,regcntr_id,lang_code,last_login_method,is_active,cr_by,cr_dtimes,eff_dtimes) FROM './dml/master-user_detail_h.csv' delimiter ',' HEADER  csv;
+\COPY master.user_detail_h (id,name,status_code,regcntr_id,lang_code,last_login_method,is_active,cr_by,cr_dtimes,eff_dtimes) FROM './dml/master-user_detail_h.csv' delimiter ',' HEADER  csv;
 
 ----- TRUNCATE master.zone_user TABLE Data and It's reference Data and COPY Data from CSV file -----
 TRUNCATE TABLE master.zone_user_h cascade ;
