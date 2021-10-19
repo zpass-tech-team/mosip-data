@@ -1,4 +1,4 @@
-﻿id,uin,name,email,mobile,status_code,regcntr_id,lang_code,last_login_method,is_active,cr_by,cr_dtimes,eff_dtimes
+﻿id,name,status_code,regcntr_id,lang_code,last_login_method,is_active,cr_by,cr_dtimes,eff_dtimes
 110001,Megha Tanga,ACT,10001,eng,PWD,TRUE,superadmin,now(),now()
 110002,Mahesh Kumar G,ACT,10003,eng,PWD,TRUE,superadmin,now(),now()
 110003,Raghav,ACT,10003,eng,PWD,TRUE,superadmin,now(),now()
@@ -39,7 +39,7 @@
 110038,Rounak Nayak,ACT,10006,eng,PWD,TRUE,superadmin,now(),now()
 110039,Girish Yarru,ACT,10006,eng,PWD,TRUE,superadmin,now(),now()
 110040,Shekhar Suman,ACT,10006,eng,PWD,TRUE,superadmin,now(),now()
-110041,Nagalakshmi Nithyanandan,ACT,10006,eng,PWD,TRUE,superadmin,now()
+110041,Nagalakshmi Nithyanandan,ACT,10006,eng,PWD,TRUE,superadmin,now(),now()
 110042,Sowmya Ujjappa Banakar,ACT,10006,eng,PWD,TRUE,superadmin,now(),now()
 110043,Horteppa Pujari,ACT,10006,eng,PWD,TRUE,superadmin,now(),now()
 110044,Rishabh Keshari,ACT,10006,eng,PWD,TRUE,superadmin,now(),now()
