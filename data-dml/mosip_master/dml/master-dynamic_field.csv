@@ -2,52 +2,52 @@ id,name,description,data_type,value_json,lang_code,is_active,cr_by,cr_dtimes
 10001,bloodType,Blood Type,string,"
 	{
 		""code"": ""101"",
-		""value"": ""A"",
+		""value"": ""A""
 	}",eng,TRUE,superadmin,now()
 10002,bloodType,Blood Type,string,"
 	{
 		""code"": ""102"",
-		""value"": ""A+"",
+		""value"": ""A+""
 	}",eng,TRUE,superadmin,now()
 10003,bloodType,Blood Type,string,"
 	{
 		""code"": ""103"",
-		""value"": ""A-"",
+		""value"": ""A-""
 	}",eng,TRUE,superadmin,now()
 10004,bloodType,Blood Type,string,"
 	{
 		""code"": ""104"",
-		""value"": ""B"",
+		""value"": ""B""
 	}",eng,TRUE,superadmin,now()
 10005,bloodType,Blood Type,string,"
 	{
 		""code"": ""105"",
-		""value"": ""B+"",
+		""value"": ""B+""
 	}",eng,TRUE,superadmin,now()
 10006,bloodType,Blood Type,string,"
 	{
 		""code"": ""106"",
-		""value"": ""B-"",
+		""value"": ""B-""
 	}",eng,TRUE,superadmin,now()
 10007,bloodType,Blood Type,string,"
 	{
 		""code"": ""107"",
-		""value"": ""AB"",
+		""value"": ""AB""
 	}",eng,TRUE,superadmin,now()
 10008,bloodType,Blood Type,string,"
 	{
 		""code"": ""108"",
-		""value"": ""AB+"",
+		""value"": ""AB+""
 	}",eng,TRUE,superadmin,now()
 10009,bloodType,Blood Type,string,"
 	{
 		""code"": ""109"",
-		""value"": ""AB-"",
+		""value"": ""AB-""
 	}",eng,TRUE,superadmin,now()
 10010,bloodType,Blood Type,string,"
 	{
 		""code"": ""110"",
-		""value"": ""O"",
+		""value"": ""O""
 	}",eng,TRUE,superadmin,now()
 10011,bloodType,Blood Type,string,"
 	{
@@ -157,52 +157,52 @@ id,name,description,data_type,value_json,lang_code,is_active,cr_by,cr_dtimes
 10032,bloodType,Blood Type,string,"
 	{
 		""code"": ""101"",
-		""value"": ""A"",
+		""value"": ""A""
 	}",ara,TRUE,superadmin,now()
 10033,bloodType,Blood Type,string,"
 	{
 		""code"": ""102"",
-		""value"": ""A+"",
+		""value"": ""A+""
 	}",ara,TRUE,superadmin,now()
 10034,bloodType,Blood Type,string,"
 	{
 		""code"": ""103"",
-		""value"": ""A-"",
+		""value"": ""A-""
 	}",ara,TRUE,superadmin,now()
 10035,bloodType,Blood Type,string,"
 	{
 		""code"": ""104"",
-		""value"": ""B"",
+		""value"": ""B""
 	}",ara,TRUE,superadmin,now()
 10036,bloodType,Blood Type,string,"
 	{
 		""code"": ""105"",
-		""value"": ""B+"",
+		""value"": ""B+""
 	}",ara,TRUE,superadmin,now()
 10037,bloodType,Blood Type,string,"
 	{
 		""code"": ""106"",
-		""value"": ""B-"",
+		""value"": ""B-""
 	}",ara,TRUE,superadmin,now()
 10038,bloodType,Blood Type,string,"
 	{
 		""code"": ""107"",
-		""value"": ""AB"",
+		""value"": ""AB""
 	}",ara,TRUE,superadmin,now()
 10039,bloodType,Blood Type,string,"
 	{
 		""code"": ""108"",
-		""value"": ""AB+"",
+		""value"": ""AB+""
 	}",ara,TRUE,superadmin,now()
 10040,bloodType,Blood Type,string,"
 	{
 		""code"": ""109"",
-		""value"": ""AB-"",
+		""value"": ""AB-""
 	}",ara,TRUE,superadmin,now()
 10041,bloodType,Blood Type,string,"
 	{
 		""code"": ""110"",
-		""value"": ""O"",
+		""value"": ""O""
 	}",ara,TRUE,superadmin,now()
 10042,bloodType,Blood Type,string,"
 	{
@@ -312,52 +312,52 @@ id,name,description,data_type,value_json,lang_code,is_active,cr_by,cr_dtimes
 10063,bloodType,Blood Type,string,"
 	{
 		""code"": ""101"",
-		""value"": ""A"",
+		""value"": ""A""
 	}",fra,TRUE,superadmin,now()
 10064,bloodType,Blood Type,string,"
 	{
 		""code"": ""102"",
-		""value"": ""A+"",
+		""value"": ""A+""
 	}",fra,TRUE,superadmin,now()
 10065,bloodType,Blood Type,string,"
 	{
 		""code"": ""103"",
-		""value"": ""A-"",
+		""value"": ""A-""
 	}",fra,TRUE,superadmin,now()
 10066,bloodType,Blood Type,string,"
 	{
 		""code"": ""104"",
-		""value"": ""B"",
+		""value"": ""B""
 	}",fra,TRUE,superadmin,now()
 10067,bloodType,Blood Type,string,"
 	{
 		""code"": ""105"",
-		""value"": ""B+"",
+		""value"": ""B+""
 	}",fra,TRUE,superadmin,now()
 10068,bloodType,Blood Type,string,"
 	{
 		""code"": ""106"",
-		""value"": ""B-"",
+		""value"": ""B-""
 	}",fra,TRUE,superadmin,now()
 10069,bloodType,Blood Type,string,"
 	{
 		""code"": ""107"",
-		""value"": ""AB"",
+		""value"": ""AB""
 	}",fra,TRUE,superadmin,now()
 10070,bloodType,Blood Type,string,"
 	{
 		""code"": ""108"",
-		""value"": ""AB+"",
+		""value"": ""AB+""
 	}",fra,TRUE,superadmin,now()
 10071,bloodType,Blood Type,string,"
 	{
 		""code"": ""109"",
-		""value"": ""AB-"",
+		""value"": ""AB-""
 	}",fra,TRUE,superadmin,now()
 10072,bloodType,Blood Type,string,"
 	{
 		""code"": ""110"",
-		""value"": ""O"",
+		""value"": ""O""
 	}",fra,TRUE,superadmin,now()
 10073,bloodType,Blood Type,string,"
 	{
