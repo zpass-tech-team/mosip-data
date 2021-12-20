@@ -31,7 +31,7 @@ TRUNCATE TABLE pms.auth_policy cascade ;
 ----- TRUNCATE pms.partner_policy TABLE Data and It's reference Data and COPY Data from CSV file -----
 TRUNCATE TABLE pms.partner_policy cascade ;
 
-\COPY pms.partner_policy (policy_api_key,part_id,policy_id,valid_from_datetime,valid_to_datetime,is_active,cr_by,cr_dtimes,upd_by,upd_dtimes) FROM './dml/pms-partner_policy.csv' delimiter ',' HEADER  csv;
+\COPY pms.partner_policy (policy_api_key,label,part_id,policy_id,valid_from_datetime,valid_to_datetime,is_active,cr_by,cr_dtimes,upd_by,upd_dtimes) FROM './dml/pms-partner_policy.csv' delimiter ',' HEADER  csv;
 
 ----- TRUNCATE pms.partner_policy_bioextract TABLE Data and It's reference Data and COPY Data from CSV file -----
 TRUNCATE TABLE pms.partner_policy_bioextract cascade ;
