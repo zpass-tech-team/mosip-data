@@ -61,5 +61,17 @@ TRUNCATE TABLE pms.auth_policy_h cascade ;
 
 \COPY pms.auth_policy_h (id,eff_dtimes,policy_group_id,name,descr,policy_file_id,policy_type,version,policy_schema,valid_from_date,valid_to_date,is_active,cr_by,cr_dtimes,upd_by,upd_dtimes) FROM './dml/pms-auth_policy_h.csv' delimiter ',' HEADER  csv;
 
+----- TRUNCATE pms.reg_device_type TABLE Data and It's reference Data and COPY Data from CSV file -----
+
+TRUNCATE TABLE pms.reg_device_type cascade ;
+
+\COPY pms.reg_device_type (code,name,descr,is_active,cr_by,cr_dtimes) FROM './dml/pms-reg_device_type.csv' delimiter ',' HEADER  csv;
+
+-------------- Level 2 data load scripts ------------------------
+
+----- TRUNCATE pms.reg_device_sub_type TABLE Data and It's reference Data and COPY Data from CSV file -----
+TRUNCATE TABLE pms.reg_device_sub_type cascade ;
+
+\COPY pms.reg_device_sub_type (code,dtyp_code,name,descr,is_active,cr_by,cr_dtimes) FROM './dml/pms-reg_device_sub_type.csv' delimiter ',' HEADER  csv;
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
