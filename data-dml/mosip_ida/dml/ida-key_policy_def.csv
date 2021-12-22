@@ -1,3 +1,4 @@
-app_id,key_validity_duration,is_active,cr_by,cr_dtimes
-IDA,1095,TRUE,mosipadmin,now()
-ROOT,1826,TRUE,mosipadmin,now()
+app_id,key_validity_duration,is_active,cr_by,cr_dtimes,pre_expire_days,access_allowed
+IDA,1095,TRUE,mosipadmin,now(),60,NA
+ROOT,1826,TRUE,mosipadmin,now(),60,NA
+BASE,730,TRUE,mosipadmin,now(),30,NA
