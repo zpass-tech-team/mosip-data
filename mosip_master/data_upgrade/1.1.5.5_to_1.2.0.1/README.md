@@ -1,0 +1,26 @@
+## Migrating country specific data from 1.1.5.5 to 1.2.0.1 version
+
+1. Migration of dynamic field table data.
+	Dynamic value was stored as jsonarray in version 1.1.5*, now in 1.2.0.1 we store it as json object. one entry for each language of the field.
+
+	Script takes the backup of existing table and migrates dynamic field table data into new table created.
+
+2. UI Spec migration
+
+	In 1.1.5* both Identity schema and UI spec was stored in identity_schema table. From 1.2.0 it is split into 2 different tables, identity_schema and ui_spec. As part of sql upgrade script data split is taken care.
+
+	Here, we take care of migration of old UI spec to new UI spec. It is recommended to verify the validators and visibility expressions in migrated UI SPEC.
+	Ref: https://docs.mosip.io/1.2.0/modules/registration-client/registration-client-ui-specifications
+
+	Refer below API documentation to define and publish UI spec
+
+	https://mosip.github.io/documentation/1.2.0/kernel-masterdata-service.html#operation/defineUISpec
+	https://mosip.github.io/documentation/1.2.0/kernel-masterdata-service.html#operation/publishUISpec
+
+3. Template type and Template data change: 
+	
+	New template types and templates were introduced in 1.2.0.1. All the new types and templates itself are provided in the xlsx file in the same directoy in all english, arabic, french, kannada, hindi and tamil.
+
+	"id" column in the excel sheet should be left empty, script takes care of autogenerating the id's before upload to server.
+
+	Note: We have introduced "label" and "value" in registration client acknowledgment and preview templates. Data in all the captured languages are slash separated and is provided to the template with "label" and "value" keys. So instead of "primaryLabel" and "primaryValue", "secondaryLabel" and "secondaryValue" use "label" and "value". To be backward compatibile, we still provide support for "primaryLabel" and "primaryValue" in 1.2.0.1.
