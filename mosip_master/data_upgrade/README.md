@@ -27,6 +27,15 @@ mosip_data  → repository
 			rollback_commands.txt
 
 
+## How to run the migration script
+
+`bash upgrade.sh upgrade.properties`
+
+upgrade.sh file execute the list of commands one after the other listed in upgrade_commands.txt
+Before executing the script, kindly update the upgrade.properties with valid values.
+
+
+
 
 
 
