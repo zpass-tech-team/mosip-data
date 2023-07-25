@@ -37,7 +37,7 @@ cur.execute('''CREATE TABLE master.dynamic_field(
 print("created table dynamic_field")
 
 
-cur.execute('GRANT SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES ON master.blocklisted_words TO masteruser;')
+cur.execute('GRANT SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES ON master.dynamic_field TO masteruser;')
 print("Applied grant on dynamic_field")
 
 #Query all the records from backup table

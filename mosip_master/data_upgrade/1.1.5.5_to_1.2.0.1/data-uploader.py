@@ -47,12 +47,28 @@ def getCurrentDateTime():
 def get_seed_value():
   conn = psycopg2.connect(database="mosip_master", user = args.dbusername, password = args.dbpassword, host = args.dbhost, port = args.dbport)
   cursor = conn.cursor()
-  cursor.execute("select max(id) from master."+args.table+";")
-  seed_value = cursor.fetchone()[0]
+  cursor.execute("select id from master."+args.table+" order by id desc limit 20")
+  for row in cursor.fetchall():
+    id_value = row[0]
+    if id_value is None:
+      seed_value = 1000
+      break
+    if id_value.isdigit():
+      seed_value = id_value
+      break;
+    
   if seed_value == None:
     seed_value = 1000
   return seed_value
 
+
+def find_last_data_row(sheet):
+    max_row = sheet.max_row
+
+    for row in range(max_row, 0, -1):
+        for cell in sheet[row]:
+            if cell.value is not None:
+                return row
 
 def fill_series():
     if args.sheetname == None:
@@ -73,19 +89,14 @@ def fill_series():
     sheet = workbook[args.sheetname]
     column = sheet[args.idcolumn]
 
-    start_row = None
-    end_row = None
-    for i, cell in enumerate(column, start=2):
-        if cell.value is None:
-            if start_row is None:
-                start_row = i
-            end_row = i    
+    start_row = 2
+    end_row = find_last_data_row(sheet)
 
     print("Start Row: ", start_row)
     print("End Row: ", end_row)
 
     if(start_row is None and end_row is None):
-      print("Series not filled as the column is not empty!")
+      print("Need a valid start_row and end_row!")
       return
 
     for i, value in enumerate(range(start_row, end_row + 1), start=1):
