@@ -12,8 +12,6 @@ mosip_data  → repository
 
 		1.1.5.5_to_1.2.0.1 → Folder to contain scripts and data files required for country-specific data migration.
 
-			data → folder to hold the CSV / xlsx files 
-
 			scripts to handle specific data change eg: change in UI spec
 
 			Readme
@@ -33,6 +31,8 @@ mosip_data  → repository
 
 upgrade.sh file execute the list of commands one after the other listed in upgrade_commands.txt
 Before executing the script, kindly update the upgrade.properties with valid values.
+
+
 
 
 
