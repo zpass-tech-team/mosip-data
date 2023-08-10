@@ -26,3 +26,10 @@
 	3. Cross check if all the language specific data is valid and correct w.r.t the language.Make the change as required in the template text (file_text column) if required.
 
 	Note: We have introduced "label" and "value" in registration client acknowledgment and preview templates. Data in all the captured languages are slash separated and is provided to the template with "label" and "value" keys. So instead of "primaryLabel" and "primaryValue", "secondaryLabel" and "secondaryValue" use "label" and "value". To be backward compatibile, we still provide support for "primaryLabel" and "primaryValue" in 1.2.0.1.
+
+4. Machine Type, Machine Specification & Zone User mapping:
+
+	Resident service is introduced as new machine type and corresponding machine specification is added.
+	And most importantly, Resident service client is mapped to the top most zone in the zone heirarchy (country code).
+
+	Note: In zone_user_delta.xlsx, resident service client is mapped to a dummy zone "MOR". Before execution of the upgrade.sh script, update the zone_code to appropriate value and save the changes.
