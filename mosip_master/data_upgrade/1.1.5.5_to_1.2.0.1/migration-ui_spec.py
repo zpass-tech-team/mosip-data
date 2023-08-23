@@ -9,6 +9,7 @@ from datetime import datetime, timezone, timedelta
 import argparse
 import requests
 import json
+import sys
 
 parser = argparse.ArgumentParser(description='This is UI spec migration script. Migrates 1.1.5.5 UI spec to 1.2.0 compatible SPEC and the same is published to the server. This script should be executed after DB upgrade and 1.2.0.* masterdata-service deployment.')
 parser.add_argument("-d", "--domain", type=str, required=True, help="Server domain name, eg: dev.mosip.net")
@@ -16,6 +17,10 @@ parser.add_argument("-u", "--username", type=str, required=True, help="User with
 parser.add_argument("-p", "--password", type=str, required=True, help="User password")
 parser.add_argument("-pl", "--primaryLanguage", type=str, required=True, help="3 letter primary language code as used in 1.1.5.5")
 parser.add_argument("-sl", "--secondaryLanguage", type=str, required=True, help="3 letter secondary language code as used in 1.1.5.5")
+parser.add_argument("--residentBiometricFieldId", type=str, required=True)
+parser.add_argument("--residentAuthenticationBiometricFieldId", type=str, required=True)
+parser.add_argument("--gaurdianBiometricFieldId", type=str, required=True)
+parser.add_argument("--gaurdianDemographicFieldId", type=str, required=True)
 
 
 args = parser.parse_args()
@@ -30,12 +35,36 @@ primaryLang=args.primaryLanguage
 secondaryLang=args.secondaryLanguage
 username=args.username
 password=args.password
+individual_bio_field=args.residentBiometricFieldId
+auth_bio_field=args.residentAuthenticationBiometricFieldId
+guardian_bio_field=args.gaurdianBiometricFieldId
+guardian_demo_field=args.gaurdianDemographicFieldId
 
 
 def getCurrentDateTime():
   dt_now = datetime.now(timezone.utc)
   dt_now_str = dt_now.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]
   return dt_now_str+'Z'
+
+def is_valid_bio_fieldIds(values):
+	if individual_bio_field in values and auth_bio_field in values and guardian_bio_field in values:
+		return True
+	else:
+		print(values)
+		return False
+
+def getGuardianDemographicFieldGroup(demographics):
+	guardian_group = None
+	for field in demographics:
+		if field['id'] == guardian_demo_field:
+			guardian_group = field['group']
+			break
+
+	if guardian_group == None:
+		sys.exit("Kindly check the provided Guardian/Introducer demographic field Id (Any one).")
+
+	return guardian_group
+
 
 def getAccessToken():
   auth_req_data = {
@@ -50,6 +79,7 @@ def getAccessToken():
     'version': 'string'
   }
   authresponse=requests.post(authURL, json= auth_req_data)
+  print(authresponse)
   return authresponse.headers["authorization"]
 
 
@@ -163,43 +193,8 @@ def getConsentFields():
 					}]
 
 
-
-
-# invoke syncdata service with authtoken in headers
-req_headers={'Cookie' : 'Authorization='+getAccessToken()}
-schema_resp=requests.get(schemaURL, headers=req_headers)
-print(schema_resp)
-schema_resp_1=schema_resp.json()
-schema_resp_2=schema_resp_1['response']
-
-identity_schema_id=schema_resp_2['id']
-cur_schema=schema_resp_2['schema']
-domain='registration-client'
-
-
-demographics=[]
-documents=[]
-biometrics=[]
-# read response json and create UI-specs
-for field in cur_schema:
-	if(field['inputRequired']):
-		#Add labels		
-		labels=field['label']
-		labels[primaryLang]=labels['primary']
-		if(labels.get('secondary') != None):
-			labels[secondaryLang]=labels['secondary']
-		
-		field['label']=labels
-
-		if field['type'] == 'documentType':
-			documents.append(field)
-		elif field['type'] == 'biometricsType':
-			biometrics.append(field)
-		else:
-			demographics.append(field)
-
-
-new_spec = {
+def buildNewRegistrationSpec(demographic_fields, document_fields, biometric_fields):
+	spec = {
 					   "id": "NEW",
 					   "order": 1,
 					   "flow": "NEW",
@@ -238,7 +233,7 @@ new_spec = {
 			                  "fra": "Détails démographiques",
 			                  "eng": "Demographic Details"
 					           },
-					           "fields": demographics,
+					           "fields": demographic_fields,
 					           "preRegFetchRequired": True,
 					           "additionalInfoRequestIdRequired": False,
 					           "active": False
@@ -256,25 +251,7 @@ new_spec = {
 			                  "fra": "Des documents",
 			                  "eng": "Documents"
 					           },
-					           "fields": documents,
-					           "preRegFetchRequired": False,
-					           "additionalInfoRequestIdRequired": False,
-					           "active": False
-					       },
-					       {
-					           "order": 4,
-					           "name": "BiometricDetails",
-					           "label": {
-					              "ara": "التفاصيل البيومترية",
-			                  "fra": "Détails biométriques",
-			                  "eng": "Biometric Details"
-					           },
-					           "caption": {
-					               "ara": "التفاصيل البيومترية",
-				                  "fra": "Détails biométriques",
-				                  "eng": "Biometric Details"
-					           },
-					           "fields": biometrics,
+					           "fields": demographic_fields,
 					           "preRegFetchRequired": False,
 					           "additionalInfoRequestIdRequired": False,
 					           "active": False
@@ -289,12 +266,132 @@ new_spec = {
 					   "isActive": True,
 					}
 	
+	for field in biometric_fields:
+		if field['id'] == individual_bio_field:
+			individualBioField = {key: value for key, value in field.items()}
+			individualBioField["conditionalBioAttributes"]=[{
+								"ageGroup": "CHILD",
+								"process": "ALL",
+								"validationExpr": "face",
+								"bioAttributes": [
+									"face"
+								]
+							}]
+			individualBioField["required"] = True
+			individualBioField["requiredOn"] = []
+			individualBioField["exceptionPhotoRequired"] = True
+			individualBioField["subType"] = "applicant"
 
-#publish ui-spec with for new process
-publish_spec(domain, 'newProcess', new_spec)
+			spec['screens'].append({
+					           "order": 4,
+					           "name": "IndividualBiometricDetails",
+					           "label": individualBioField["label"],
+					           "caption": individualBioField["label"],
+					           "fields": [individualBioField],
+					           "preRegFetchRequired": False,
+					           "additionalInfoRequestIdRequired": False,
+					           "active": False
+					       })
+
+		if field['id'] == guardian_bio_field:
+			guardianBioField = {key: value for key, value in field.items()}
+			guardianBioField["conditionalBioAttributes"]=[{
+								"ageGroup": "CHILD",
+								"process": "ALL",
+								"validationExpr": "leftEye || rightEye || rightIndex || rightLittle || rightRing || rightMiddle || leftIndex || leftLittle || leftRing || leftMiddle || leftThumb || rightThumb || face",
+								"bioAttributes": [
+									"leftEye",
+									"rightEye",
+									"rightIndex",
+									"rightLittle",
+									"rightRing",
+									"rightMiddle",
+									"leftIndex",
+									"leftLittle",
+									"leftRing",
+									"leftMiddle",
+									"leftThumb",
+									"rightThumb",
+									"face"
+								]
+							}]
+			guardianBioField["required"] = False
+			guardianBioField["requiredOn"] = [{
+								"engine": "MVEL",
+								"expr": "identity.get('ageGroup') == 'CHILD'"
+							}]
+			guardianBioField["subType"] = "introducer"
+
+			spec['screens'].append({
+					           "order": 5,
+					           "name": "GaurdianBiometricDetails",
+					           "label": guardianBioField["label"],
+					           "caption": guardianBioField["label"],
+					           "fields": [guardianBioField],
+					           "preRegFetchRequired": False,
+					           "additionalInfoRequestIdRequired": False,
+					           "active": False
+					       })	
+
+	return spec
 
 
-update_spec = {
+def buildSettingsSpec():
+	return [{
+	"name": "scheduledjobs",
+	"description": {
+		"ara": "إعدادات الوظائف المجدولة",
+		"fra": "Paramètres des travaux planifiés",
+		"eng": "Scheduled Jobs Settings"
+	},
+	"label": {
+		"ara": "إعدادات الوظائف المجدولة",
+		"fra": "Paramètres des travaux planifiés",
+		"eng": "Scheduled Jobs Settings"
+	},
+	"fxml": "ScheduledJobsSettings.fxml",
+	"icon": "scheduledjobs.png",
+	"order": "1",
+	"shortcut-icon": "scheduledjobs-shortcut.png",
+	"access-control": ["REGISTRATION_SUPERVISOR"]
+}, {
+	"name": "globalconfigs",
+	"description": {
+		"ara": "إعدادات التكوين العامة",
+		"fra": "Paramètres de configuration globale",
+		"eng": "Global Config Settings"
+	},
+	"label": {
+		"ara": "إعدادات التكوين العامة",
+		"fra": "Paramètres de configuration globale",
+		"eng": "Global Config Settings"
+	},
+	"fxml": "GlobalConfigSettings.fxml",
+	"icon": "globalconfigs.png",
+	"order": "2",
+	"shortcut-icon": "globalconfigs-shortcut.png",
+	"access-control": ["REGISTRATION_SUPERVISOR", "REGISTRATION_OFFICER"]
+}, {
+	"name": "devices",
+	"description": {
+		"ara": "إعدادات الجهاز",
+		"fra": "Réglages de l'appareil",
+		"eng": "Device Settings"
+	},
+	"label": {
+		"ara": "إعدادات الجهاز",
+		"fra": "Réglages de l'appareil",
+		"eng": "Device Settings"
+	},
+	"fxml": "DeviceSettings.fxml",
+	"icon": "devices.png",
+	"order": "3",
+	"shortcut-icon": "devices-shortcut.png",
+	"access-control": ["REGISTRATION_SUPERVISOR", "REGISTRATION_OFFICER"]
+}]
+
+def buildUpdateRegistrationSpec(demographic_fields, document_fields, biometric_fields, guardian_group_name):
+	spec = {
 					   "id": "UPDATE",
 					   "order": 2,
 					   "flow": "UPDATE",
@@ -375,6 +472,7 @@ update_spec = {
 					           "active": False
 					       }
 					   ],
+					   "autoSelectedGroups": ["Consent","Documents","Biometrics"],
 					   "caption": {
 					       "eng": "Update UIN",
 		              "ara": "تحديث UIN",
@@ -385,13 +483,135 @@ update_spec = {
 					}
 	
 
-#publish ui-spec with for update process
-publish_spec(domain, 'updateProcess', update_spec)
+	for field in biometric_fields:
+		if field['id'] == individual_bio_field:
+			individualBioField = {key: value for key, value in field.items()}
+			individualBioField["conditionalBioAttributes"]=[{
+								"ageGroup": "CHILD",
+								"process": "ALL",
+								"validationExpr": "face",
+								"bioAttributes": [
+									"face"
+								]
+							}]
+			individualBioField["exceptionPhotoRequired"] = True
+			individualBioField["required"] = True
+			individualBioField["group"] = "Biometrics"
+			individualBioField["groupLabel"] = {
+								"ara": "القياسات الحيوية",
+								"fra": "Biométrie",
+								"eng": "Biometrics"
+							}
+			individualBioField["requiredOn"] = [{
+								"engine": "MVEL",
+								"expr": "identity.updatableFieldGroups contains 'Biometrics'"
+							}]
+			individualBioField["subType"] = "applicant"
+
+			spec['screens'].append({
+					           "order": 4,
+					           "name": "IndividualBiometricDetails",
+					           "label": individualBioField["label"],
+					           "caption": individualBioField["label"],
+					           "fields": [individualBioField],
+					           "preRegFetchRequired": False,
+					           "additionalInfoRequestIdRequired": False,
+					           "active": False
+					       })
+
+		if field['id'] == auth_bio_field:
+			authBioField = {key: value for key, value in field.items()}
+			authBioField["conditionalBioAttributes"]=[{
+								"ageGroup": "ALL",
+								"process": "ALL",
+								"validationExpr": "leftEye || rightEye || rightIndex || rightLittle || rightRing || rightMiddle || leftIndex || leftLittle || leftRing || leftMiddle || leftThumb || rightThumb || face",
+								"bioAttributes": [
+									"leftEye",
+									"rightEye",
+									"rightIndex",
+									"rightLittle",
+									"rightRing",
+									"rightMiddle",
+									"leftIndex",
+									"leftLittle",
+									"leftRing",
+									"leftMiddle",
+									"leftThumb",
+									"rightThumb",
+									"face"
+								]
+							}]
+			authBioField["required"] = False
+			authBioField["group"] = "Biometrics"
+			authBioField["groupLabel"] = {
+								"ara": "القياسات الحيوية",
+								"fra": "Biométrie",
+								"eng": "Biometrics"
+							}
+			authBioField["requiredOn"] = [{
+								"engine": "MVEL",
+								"expr": "!(identity.get('ageGroup') == 'CHILD') && !(identity.updatableFieldGroups contains 'Biometrics')"
+							}]
+			authBioField["subType"] = "applicant-auth"
+
+			spec['screens'].append({
+					           "order": 5,
+					           "name": "AuthBiometricDetails",
+					           "label": authBioField["label"],
+					           "caption": authBioField["label"],
+					           "fields": [authBioField],
+					           "preRegFetchRequired": False,
+					           "additionalInfoRequestIdRequired": False,
+					           "active": False
+					       })
+
+		if field['id'] == guardian_bio_field:
+			guardianBioField = {key: value for key, value in field.items()}
+			guardianBioField["conditionalBioAttributes"]=[{
+								"ageGroup": "ALL",
+								"process": "ALL",
+								"validationExpr": "leftEye || rightEye || rightIndex || rightLittle || rightRing || rightMiddle || leftIndex || leftLittle || leftRing || leftMiddle || leftThumb || rightThumb || face",
+								"bioAttributes": [
+									"leftEye",
+									"rightEye",
+									"rightIndex",
+									"rightLittle",
+									"rightRing",
+									"rightMiddle",
+									"leftIndex",
+									"leftLittle",
+									"leftRing",
+									"leftMiddle",
+									"leftThumb",
+									"rightThumb",
+									"face"
+								]
+							}]
+			guardianBioField["group"] = "Biometrics"
+			guardianBioField["required"] = False
+			guardianBioField["requiredOn"] = [{
+								"engine": "MVEL",
+								"expr": "identity.get('ageGroup') == 'CHILD' || identity.updatableFieldGroups contains '"+guardian_group_name+"'"
+							}]
+			guardianBioField["subType"] = "introducer"
+
+			spec['screens'].append({
+					           "order": 6,
+					           "name": "GuardianBiometricDetails",
+					           "label": guardianBioField["label"],
+					           "caption": guardianBioField["label"],
+					           "fields": [guardianBioField],
+					           "preRegFetchRequired": False,
+					           "additionalInfoRequestIdRequired": False,
+					           "active": False
+					       })	
+	return spec
 
 
-lost_spec = {
+def buildLostRegistrationSpec(demographic_fields, document_fields, biometric_fields):
+	spec = {
 					   "id": "LOST",
-					   "order": 2,
+					   "order": 3,
 					   "flow": "LOST",
 					   "label": {
 					        "eng": "Lost UIN",
@@ -478,10 +698,95 @@ lost_spec = {
 					   "icon": "LostUIN.png",
 					   "isActive": True
 					}
-	
+
+	for field in biometric_fields:
+		if field['id'] == individual_bio_field:
+			individualBioField = {key: value for key, value in field.items()}
+			individualBioField["conditionalBioAttributes"]=[{
+								"ageGroup": "CHILD",
+								"process": "ALL",
+								"validationExpr": "face",
+								"bioAttributes": [
+									"face"
+								]
+							}]
+			individualBioField["required"] = True
+			individualBioField["requiredOn"] = []
+			individualBioField["subType"] = "applicant"
+
+			spec['screens'].append({
+					           "order": 3,
+					           "name": "BiometricDetails",
+					           "label": individualBioField["label"],
+					           "caption": individualBioField["label"],
+					           "fields": [individualBioField],
+					           "preRegFetchRequired": False,
+					           "additionalInfoRequestIdRequired": False,
+					           "active": False
+					       })
+
+	for field in demographics:
+		field["required"] = False
+
+	return spec
+
+
+
+
+# invoke syncdata service with authtoken in headers
+req_headers={'Cookie' : 'Authorization='+getAccessToken()}
+schema_resp=requests.get(schemaURL, headers=req_headers)
+print(schema_resp)
+schema_resp_1=schema_resp.json()
+schema_resp_2=schema_resp_1['response']
+
+identity_schema_id=schema_resp_2['id']
+cur_schema=schema_resp_2['schema']
+domain='registration-client'
+
+
+demographics=[]
+documents=[]
+biometrics=[]
+
+# read response json and create UI-specs
+for field in cur_schema:
+	if(field['inputRequired']):
+		#Add labels		
+		labels=field['label']
+		labels[primaryLang]=labels['primary']
+		labels[secondaryLang]=labels['secondary']
+		field['label']=labels
+
+		if field['type'] == 'documentType':
+			documents.append(field)
+		elif field['type'] == 'biometricsType':
+			biometrics.append(field)
+		else:
+			demographics.append(field)
+
+guardian_group = getGuardianDemographicFieldGroup(demographics);
+
+## should take user input about biometric fields:
+bioFieldIds = []
+for field in biometrics:
+	bioFieldIds.append(field['id'])
+
+
+if is_valid_bio_fieldIds(bioFieldIds) == False:
+	sys.exit("Kindly check the biometics field Ids provided as input. Must be one in above valid values")
+
+
+#publish ui-spec with for new process
+publish_spec(domain, 'newProcess', buildNewRegistrationSpec(demographics, documents, biometrics))
+
+
+#publish ui-spec with for update process
+publish_spec(domain, 'updateProcess', buildUpdateRegistrationSpec(demographics, documents, biometrics, guardian_group))
+
 
 #publish ui-spec with for lost process
-publish_spec(domain, 'lostProcess', lost_spec)
+publish_spec(domain, 'lostProcess', buildLostRegistrationSpec(demographics, documents, biometrics))
 
 settings_spec = [{
 	"name": "scheduledjobs",
@@ -537,4 +842,4 @@ settings_spec = [{
 }]
 
 #publish ui-spec with for settings screens
-publish_spec(domain, 'settings', settings_spec)
+publish_spec(domain, 'settings', buildSettingsSpec())
