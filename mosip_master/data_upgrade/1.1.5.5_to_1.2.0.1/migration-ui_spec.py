@@ -186,7 +186,7 @@ for field in cur_schema:
 		#Add labels		
 		labels=field['label']
 		labels[primaryLang]=labels['primary']
-		if(labels['secondary'] != None):
+		if(labels.get('secondary') != None):
 			labels[secondaryLang]=labels['secondary']
 		
 		field['label']=labels
