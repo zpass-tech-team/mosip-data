@@ -186,7 +186,9 @@ for field in cur_schema:
 		#Add labels		
 		labels=field['label']
 		labels[primaryLang]=labels['primary']
-		labels[secondaryLang]=labels['secondary']
+		if(labels['secondary'] != None):
+			labels[secondaryLang]=labels['secondary']
+		
 		field['label']=labels
 
 		if field['type'] == 'documentType':
