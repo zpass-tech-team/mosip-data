@@ -764,7 +764,7 @@ for field in cur_schema:
 		elif field['type'] == 'biometricsType':
 			biometrics.append(field)
 		else:
-			if(field['fieldType'] == 'dynamic')
+			if field['fieldType'] == 'dynamic':
 				newSubType = field['id']
 				field['subType'] = newSubType
 			demographics.append(field)
