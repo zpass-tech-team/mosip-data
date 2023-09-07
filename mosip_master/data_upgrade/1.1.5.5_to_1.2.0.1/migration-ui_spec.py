@@ -755,7 +755,8 @@ for field in cur_schema:
 		#Add labels		
 		labels=field['label']
 		labels[primaryLang]=labels['primary']
-		labels[secondaryLang]=labels['secondary']
+		if(labels.get('secondary') != None):
+			labels[secondaryLang]=labels['secondary']
 		field['label']=labels
 
 		if field['type'] == 'documentType':
@@ -763,6 +764,9 @@ for field in cur_schema:
 		elif field['type'] == 'biometricsType':
 			biometrics.append(field)
 		else:
+			if(field['fieldType'] == 'dynamic')
+				newSubType = field['id']
+				field['subType'] = newSubType
 			demographics.append(field)
 
 guardian_group = getGuardianDemographicFieldGroup(demographics);
