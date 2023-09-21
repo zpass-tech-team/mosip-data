@@ -17,11 +17,9 @@ parser.add_argument("-u", "--username", type=str, required=True, help="User with
 parser.add_argument("-p", "--password", type=str, required=True, help="User password")
 parser.add_argument("-pl", "--primaryLanguage", type=str, required=True, help="3 letter primary language code as used in 1.1.5.5")
 parser.add_argument("-sl", "--secondaryLanguage", type=str, required=True, help="3 letter secondary language code as used in 1.1.5.5")
-parser.add_argument("--residentBiometricFieldId", type=str, required=True)
-parser.add_argument("--residentAuthenticationBiometricFieldId", type=str, required=True)
-parser.add_argument("--gaurdianBiometricFieldId", type=str, required=True)
-parser.add_argument("--gaurdianDemographicFieldId", type=str, required=True)
-
+parser.add_argument("--identityMappingJsonUrl", type=str, required=True, help="URL to download identity_mapping.json")
+parser.add_argument("--ageGroupConfig", type=str, required=True, help="Age group configuration")
+parser.add_argument("--infantAgeGroup", type=str, required=True, help="Infant Age group name")
 
 args = parser.parse_args()
 
@@ -35,10 +33,66 @@ primaryLang=args.primaryLanguage
 secondaryLang=args.secondaryLanguage
 username=args.username
 password=args.password
-individual_bio_field=args.residentBiometricFieldId
-auth_bio_field=args.residentAuthenticationBiometricFieldId
-guardian_bio_field=args.gaurdianBiometricFieldId
-guardian_demo_field=args.gaurdianDemographicFieldId
+agegroup_config=args.ageGroupConfig
+infantAgeGroup = args.infantAgeGroup.strip()
+
+## values loaded from identity-mapping.json
+individual_bio_field=None
+auth_bio_field=None
+guardian_bio_field=None
+guardian_demo_fields=[]
+ageGroupBasedModalities = {}
+ageGroupRequiresGuardian = []
+
+allBioAttributes = ["leftEye","rightEye","rightIndex","rightLittle","rightRing","rightMiddle","leftIndex","leftLittle","leftRing","leftMiddle","leftThumb","rightThumb","face"]
+
+
+def getSupportedAgeGroups():
+	agegroup_config_json=json.loads(agegroup_config)
+	for ageGroup in agegroup_config_json.keys():
+		modalities = []
+		while not modalities:
+			modalities = agegroup_config_json.get(ageGroup).get("bioAttributes")
+		ageGroupBasedModalities[ageGroup] = modalities
+
+		requiresGuardianAuth = agegroup_config_json.get(ageGroup).get("isGuardianAuthRequired")
+		if(requiresGuardianAuth == True):
+			ageGroupRequiresGuardian.append(ageGroup)
+
+
+def getConditionalBioAttributes():
+	conditionalBioAttributes = []
+	for ageGroup in ageGroupBasedModalities.keys():
+		bioAttributes = ageGroupBasedModalities.get(ageGroup)
+		if(len(bioAttributes) < 13):
+			conditionalBioAttributes.append({
+								"ageGroup": ageGroup,
+								"process": "ALL",
+								"validationExpr": " && ".join(bioAttributes),
+								"bioAttributes": bioAttributes
+							})
+	return conditionalBioAttributes
+
+
+def getGaurdianConditionalBioAttributes():
+	conditionalBioAttributes = []
+	for ageGroup in ageGroupBasedModalities.keys():
+		if ageGroup in ageGroupRequiresGuardian:
+			conditionalBioAttributes.append({
+								"ageGroup": ageGroup,
+								"process": "ALL",
+								"validationExpr": " || ".join(allBioAttributes),
+								"bioAttributes": allBioAttributes
+							})
+	return conditionalBioAttributes
+
+
+def getGaurdianFieldRequiredOn():
+	exprs = []
+	for ageGroup in ageGroupBasedModalities.keys():
+		if ageGroup in ageGroupRequiresGuardian:
+			exprs.append("identity.get('ageGroup') == '"+ageGroup+"'")
+	return [{ "engine": "MVEL", "expr": " || ".join(exprs) }]
 
 
 def getCurrentDateTime():
@@ -46,8 +100,12 @@ def getCurrentDateTime():
   dt_now_str = dt_now.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]
   return dt_now_str+'Z'
 
-def is_valid_bio_fieldIds(values):
-	if individual_bio_field in values and auth_bio_field in values and guardian_bio_field in values:
+def isValidBioFieldIds(values):
+	print(values)
+	print(individual_bio_field)
+	print(auth_bio_field)
+	print(guardian_bio_field)
+	if individual_bio_field.get('value') in values and auth_bio_field.get('value') in values and guardian_bio_field.get('value') in values:
 		return True
 	else:
 		print(values)
@@ -56,7 +114,7 @@ def is_valid_bio_fieldIds(values):
 def getGuardianDemographicFieldGroup(demographics):
 	guardian_group = None
 	for field in demographics:
-		if field['id'] == guardian_demo_field:
+		if field['id'] in guardian_demo_fields:
 			guardian_group = field['group']
 			break
 
@@ -86,6 +144,9 @@ def getAccessToken():
 def publish_spec(domain, spec_type, specjson):
 	print("identity schema id : " + identity_schema_id)
 	print("identity spec_type : " + spec_type)
+	spec = json.dumps(specjson)
+	spec = spec.replace("identity.?isChild", "identity.get('ageGroup') == '"+infantAgeGroup+"'")
+	spec = spec.replace("identity.isChild", "identity.get('ageGroup') == '"+infantAgeGroup+"'")
 	request_json = {
 									  "id": "string",
 									  "version": "string",
@@ -97,7 +158,7 @@ def publish_spec(domain, spec_type, specjson):
 									    "type": spec_type,
 									    "title": spec_type + " UI spec",
 									    "description": spec_type + " UI spec",
-									    "jsonspec": specjson
+									    "jsonspec": json.loads(spec)
 									  }
 									}
 	spec_resp = requests.post(uispecURL, json=request_json, headers=req_headers)
@@ -251,7 +312,7 @@ def buildNewRegistrationSpec(demographic_fields, document_fields, biometric_fiel
 			                  "fra": "Des documents",
 			                  "eng": "Documents"
 					           },
-					           "fields": demographic_fields,
+					           "fields": document_fields,
 					           "preRegFetchRequired": False,
 					           "additionalInfoRequestIdRequired": False,
 					           "active": False
@@ -267,16 +328,9 @@ def buildNewRegistrationSpec(demographic_fields, document_fields, biometric_fiel
 					}
 	
 	for field in biometric_fields:
-		if field['id'] == individual_bio_field:
+		if field['id'] == individual_bio_field.get('value'):
 			individualBioField = {key: value for key, value in field.items()}
-			individualBioField["conditionalBioAttributes"]=[{
-								"ageGroup": "CHILD",
-								"process": "ALL",
-								"validationExpr": "face",
-								"bioAttributes": [
-									"face"
-								]
-							}]
+			individualBioField["conditionalBioAttributes"]=getConditionalBioAttributes()
 			individualBioField["required"] = True
 			individualBioField["requiredOn"] = []
 			individualBioField["exceptionPhotoRequired"] = True
@@ -293,33 +347,11 @@ def buildNewRegistrationSpec(demographic_fields, document_fields, biometric_fiel
 					           "active": False
 					       })
 
-		if field['id'] == guardian_bio_field:
+		if field['id'] == guardian_bio_field.get('value'):
 			guardianBioField = {key: value for key, value in field.items()}
-			guardianBioField["conditionalBioAttributes"]=[{
-								"ageGroup": "CHILD",
-								"process": "ALL",
-								"validationExpr": "leftEye || rightEye || rightIndex || rightLittle || rightRing || rightMiddle || leftIndex || leftLittle || leftRing || leftMiddle || leftThumb || rightThumb || face",
-								"bioAttributes": [
-									"leftEye",
-									"rightEye",
-									"rightIndex",
-									"rightLittle",
-									"rightRing",
-									"rightMiddle",
-									"leftIndex",
-									"leftLittle",
-									"leftRing",
-									"leftMiddle",
-									"leftThumb",
-									"rightThumb",
-									"face"
-								]
-							}]
+			guardianBioField["conditionalBioAttributes"]=getGaurdianConditionalBioAttributes()
 			guardianBioField["required"] = False
-			guardianBioField["requiredOn"] = [{
-								"engine": "MVEL",
-								"expr": "identity.get('ageGroup') == 'CHILD'"
-							}]
+			guardianBioField["requiredOn"] = getGaurdianFieldRequiredOn()
 			guardianBioField["subType"] = "introducer"
 
 			spec['screens'].append({
@@ -484,16 +516,9 @@ def buildUpdateRegistrationSpec(demographic_fields, document_fields, biometric_f
 	
 
 	for field in biometric_fields:
-		if field['id'] == individual_bio_field:
+		if field['id'] == individual_bio_field.get('value'):
 			individualBioField = {key: value for key, value in field.items()}
-			individualBioField["conditionalBioAttributes"]=[{
-								"ageGroup": "CHILD",
-								"process": "ALL",
-								"validationExpr": "face",
-								"bioAttributes": [
-									"face"
-								]
-							}]
+			individualBioField["conditionalBioAttributes"]=getConditionalBioAttributes()
 			individualBioField["exceptionPhotoRequired"] = True
 			individualBioField["required"] = True
 			individualBioField["group"] = "Biometrics"
@@ -519,27 +544,13 @@ def buildUpdateRegistrationSpec(demographic_fields, document_fields, biometric_f
 					           "active": False
 					       })
 
-		if field['id'] == auth_bio_field:
+		if field['id'] == auth_bio_field.get('value'):
 			authBioField = {key: value for key, value in field.items()}
 			authBioField["conditionalBioAttributes"]=[{
 								"ageGroup": "ALL",
 								"process": "ALL",
-								"validationExpr": "leftEye || rightEye || rightIndex || rightLittle || rightRing || rightMiddle || leftIndex || leftLittle || leftRing || leftMiddle || leftThumb || rightThumb || face",
-								"bioAttributes": [
-									"leftEye",
-									"rightEye",
-									"rightIndex",
-									"rightLittle",
-									"rightRing",
-									"rightMiddle",
-									"leftIndex",
-									"leftLittle",
-									"leftRing",
-									"leftMiddle",
-									"leftThumb",
-									"rightThumb",
-									"face"
-								]
+								"validationExpr": " || ".join(allBioAttributes),
+								"bioAttributes": allBioAttributes
 							}]
 			authBioField["required"] = False
 			authBioField["group"] = "Biometrics"
@@ -550,7 +561,7 @@ def buildUpdateRegistrationSpec(demographic_fields, document_fields, biometric_f
 							}
 			authBioField["requiredOn"] = [{
 								"engine": "MVEL",
-								"expr": "!(identity.get('ageGroup') == 'CHILD') && !(identity.updatableFieldGroups contains 'Biometrics')"
+								"expr": "!(identity.get('ageGroup') == '"+infantAgeGroup+"') && !(identity.updatableFieldGroups contains 'Biometrics')"
 							}]
 			authBioField["subType"] = "applicant-auth"
 
@@ -565,33 +576,19 @@ def buildUpdateRegistrationSpec(demographic_fields, document_fields, biometric_f
 					           "active": False
 					       })
 
-		if field['id'] == guardian_bio_field:
+		if field['id'] == guardian_bio_field.get('value'):
 			guardianBioField = {key: value for key, value in field.items()}
 			guardianBioField["conditionalBioAttributes"]=[{
 								"ageGroup": "ALL",
 								"process": "ALL",
-								"validationExpr": "leftEye || rightEye || rightIndex || rightLittle || rightRing || rightMiddle || leftIndex || leftLittle || leftRing || leftMiddle || leftThumb || rightThumb || face",
-								"bioAttributes": [
-									"leftEye",
-									"rightEye",
-									"rightIndex",
-									"rightLittle",
-									"rightRing",
-									"rightMiddle",
-									"leftIndex",
-									"leftLittle",
-									"leftRing",
-									"leftMiddle",
-									"leftThumb",
-									"rightThumb",
-									"face"
-								]
+								"validationExpr": " || ".join(allBioAttributes),
+								"bioAttributes": allBioAttributes
 							}]
 			guardianBioField["group"] = "Biometrics"
 			guardianBioField["required"] = False
 			guardianBioField["requiredOn"] = [{
 								"engine": "MVEL",
-								"expr": "identity.get('ageGroup') == 'CHILD' || identity.updatableFieldGroups contains '"+guardian_group_name+"'"
+								"expr": "identity.get('ageGroup') == '"+infantAgeGroup+"' || identity.updatableFieldGroups contains '"+guardian_group_name+"'"
 							}]
 			guardianBioField["subType"] = "introducer"
 
@@ -670,24 +667,6 @@ def buildLostRegistrationSpec(demographic_fields, document_fields, biometric_fie
 					           "preRegFetchRequired": False,
 					           "additionalInfoRequestIdRequired": False,
 					           "active": False
-					       },
-					       {
-					           "order": 4,
-					           "name": "BiometricDetails",
-					           "label": {
-					              "ara": "التفاصيل البيومترية",
-			                  "fra": "Détails biométriques",
-			                  "eng": "Biometric Details"
-					           },
-					           "caption": {
-					               "ara": "التفاصيل البيومترية",
-				                  "fra": "Détails biométriques",
-				                  "eng": "Biometric Details"
-					           },
-					           "fields": biometrics,
-					           "preRegFetchRequired": False,
-					           "additionalInfoRequestIdRequired": False,
-					           "active": False
 					       }
 					   ],
 					   "caption": {
@@ -700,26 +679,46 @@ def buildLostRegistrationSpec(demographic_fields, document_fields, biometric_fie
 					}
 
 	for field in biometric_fields:
-		if field['id'] == individual_bio_field:
+		if field['id'] == individual_bio_field.get('value'):
 			individualBioField = {key: value for key, value in field.items()}
-			individualBioField["conditionalBioAttributes"]=[{
-								"ageGroup": "CHILD",
-								"process": "ALL",
-								"validationExpr": "face",
-								"bioAttributes": [
-									"face"
-								]
-							}]
+			individualBioField["conditionalBioAttributes"]=getConditionalBioAttributes()
 			individualBioField["required"] = True
 			individualBioField["requiredOn"] = []
 			individualBioField["subType"] = "applicant"
 
 			spec['screens'].append({
-					           "order": 3,
+					           "order": 4,
 					           "name": "BiometricDetails",
 					           "label": individualBioField["label"],
 					           "caption": individualBioField["label"],
 					           "fields": [individualBioField],
+					           "preRegFetchRequired": False,
+					           "additionalInfoRequestIdRequired": False,
+					           "active": False
+					       })
+
+		if field['id'] == guardian_bio_field.get('value'):
+			guardianBioField = {key: value for key, value in field.items()}
+			guardianBioField["conditionalBioAttributes"]=[{
+								"ageGroup": "ALL",
+								"process": "ALL",
+								"validationExpr": " || ".join(allBioAttributes),
+								"bioAttributes": allBioAttributes
+							}]
+			guardianBioField["group"] = "Biometrics"
+			guardianBioField["required"] = False
+			guardianBioField["requiredOn"] = [{
+								"engine": "MVEL",
+								"expr": "identity.get('ageGroup') == '"+infantAgeGroup+"'"
+							}]
+			guardianBioField["subType"] = "introducer"
+
+			spec['screens'].append({
+					           "order": 5,
+					           "name": "GuardianBiometricDetails",
+					           "label": guardianBioField["label"],
+					           "caption": guardianBioField["label"],
+					           "fields": [guardianBioField],
 					           "preRegFetchRequired": False,
 					           "additionalInfoRequestIdRequired": False,
 					           "active": False
@@ -769,6 +768,28 @@ for field in cur_schema:
 				field['subType'] = newSubType
 			demographics.append(field)
 
+
+#set all the required field mappings
+response = requests.get(args.identityMappingJsonUrl)
+data = json.loads(response.text)
+identity_mapping_json = data['identity']
+if(identity_mapping_json.get('individualBiometrics') != None):
+	individual_bio_field=identity_mapping_json.get('individualBiometrics')
+if(identity_mapping_json.get('introducerBiometrics') != None):
+	guardian_bio_field=identity_mapping_json.get('introducerBiometrics')
+if(identity_mapping_json.get('individualAuthBiometrics') != None):
+	auth_bio_field=identity_mapping_json.get('individualAuthBiometrics')
+
+if(identity_mapping_json.get('introducerName') != None):
+	guardian_demo_fields.append(identity_mapping_json.get('introducerName').get('value'))
+if(identity_mapping_json.get('introducerUIN') != None):
+	guardian_demo_fields.append(identity_mapping_json.get('introducerUIN').get('value'))
+if(identity_mapping_json.get('introducerVID') != None):
+	guardian_demo_fields.append(identity_mapping_json.get('introducerVID').get('value'))
+if(identity_mapping_json.get('introducerRID') != None):
+	guardian_demo_fields.append(identity_mapping_json.get('introducerRID').get('value'))
+
+
 guardian_group = getGuardianDemographicFieldGroup(demographics);
 
 ## should take user input about biometric fields:
@@ -776,10 +797,13 @@ bioFieldIds = []
 for field in biometrics:
 	bioFieldIds.append(field['id'])
 
-
-if is_valid_bio_fieldIds(bioFieldIds) == False:
+isValid = isValidBioFieldIds(bioFieldIds)
+if isValid == False:
 	sys.exit("Kindly check the biometics field Ids provided as input. Must be one in above valid values")
 
+
+#Read ageGroup config and take the modalities input
+getSupportedAgeGroups()
 
 #publish ui-spec with for new process
 publish_spec(domain, 'newProcess', buildNewRegistrationSpec(demographics, documents, biometrics))
@@ -792,58 +816,6 @@ publish_spec(domain, 'updateProcess', buildUpdateRegistrationSpec(demographics, 
 #publish ui-spec with for lost process
 publish_spec(domain, 'lostProcess', buildLostRegistrationSpec(demographics, documents, biometrics))
 
-settings_spec = [{
-	"name": "scheduledjobs",
-	"description": {
-		"ara": "إعدادات الوظائف المجدولة",
-		"fra": "Paramètres des travaux planifiés",
-		"eng": "Scheduled Jobs Settings"
-	},
-	"label": {
-		"ara": "إعدادات الوظائف المجدولة",
-		"fra": "Paramètres des travaux planifiés",
-		"eng": "Scheduled Jobs Settings"
-	},
-	"fxml": "ScheduledJobsSettings.fxml",
-	"icon": "scheduledjobs.png",
-	"order": "1",
-	"shortcut-icon": "scheduledjobs-shortcut.png",
-	"access-control": ["REGISTRATION_SUPERVISOR"]
-}, {
-	"name": "globalconfigs",
-	"description": {
-		"ara": "إعدادات التكوين العامة",
-		"fra": "Paramètres de configuration globale",
-		"eng": "Global Config Settings"
-	},
-	"label": {
-		"ara": "إعدادات التكوين العامة",
-		"fra": "Paramètres de configuration globale",
-		"eng": "Global Config Settings"
-	},
-	"fxml": "GlobalConfigSettings.fxml",
-	"icon": "globalconfigs.png",
-	"order": "2",
-	"shortcut-icon": "globalconfigs-shortcut.png",
-	"access-control": ["REGISTRATION_SUPERVISOR", "REGISTRATION_OFFICER"]
-}, {
-	"name": "devices",
-	"description": {
-		"ara": "إعدادات الجهاز",
-		"fra": "Réglages de l'appareil",
-		"eng": "Device Settings"
-	},
-	"label": {
-		"ara": "إعدادات الجهاز",
-		"fra": "Réglages de l'appareil",
-		"eng": "Device Settings"
-	},
-	"fxml": "DeviceSettings.fxml",
-	"icon": "devices.png",
-	"order": "3",
-	"shortcut-icon": "devices-shortcut.png",
-	"access-control": ["REGISTRATION_SUPERVISOR", "REGISTRATION_OFFICER"]
-}]
 
 #publish ui-spec with for settings screens
 publish_spec(domain, 'settings', buildSettingsSpec())
