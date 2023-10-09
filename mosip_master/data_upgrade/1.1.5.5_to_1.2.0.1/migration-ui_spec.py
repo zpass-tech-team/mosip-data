@@ -20,6 +20,7 @@ parser.add_argument("-sl", "--secondaryLanguage", type=str, required=True, help=
 parser.add_argument("--identityMappingJsonUrl", type=str, required=True, help="URL to download identity_mapping.json")
 parser.add_argument("--ageGroupConfig", type=str, required=True, help="Age group configuration")
 parser.add_argument("--infantAgeGroup", type=str, required=True, help="Infant Age group name")
+parser.add_argument("--allowedBioAttributes", type=str, required=True, help="Comma separated list of allowed biometric attributes")
 
 args = parser.parse_args()
 
@@ -35,6 +36,7 @@ username=args.username
 password=args.password
 agegroup_config=args.ageGroupConfig
 infantAgeGroup = args.infantAgeGroup.strip()
+allBioAttributes= args.allowedBioAttributes.strip().split(",")
 
 ## values loaded from identity-mapping.json
 individual_bio_field=None
@@ -43,9 +45,6 @@ guardian_bio_field=None
 guardian_demo_fields=[]
 ageGroupBasedModalities = {}
 ageGroupRequiresGuardian = []
-
-allBioAttributes = ["leftEye","rightEye","rightIndex","rightLittle","rightRing","rightMiddle","leftIndex","leftLittle","leftRing","leftMiddle","leftThumb","rightThumb","face"]
-
 
 def getSupportedAgeGroups():
 	agegroup_config_json=json.loads(agegroup_config)
@@ -101,10 +100,6 @@ def getCurrentDateTime():
   return dt_now_str+'Z'
 
 def isValidBioFieldIds(values):
-	print(values)
-	print(individual_bio_field)
-	print(auth_bio_field)
-	print(guardian_bio_field)
 	if individual_bio_field.get('value') in values and auth_bio_field.get('value') in values and guardian_bio_field.get('value') in values:
 		return True
 	else:
@@ -363,8 +358,7 @@ def buildNewRegistrationSpec(demographic_fields, document_fields, biometric_fiel
 					           "preRegFetchRequired": False,
 					           "additionalInfoRequestIdRequired": False,
 					           "active": False
-					       })	
-
+					       })
 	return spec
 
 
@@ -734,13 +728,12 @@ def buildLostRegistrationSpec(demographic_fields, document_fields, biometric_fie
 
 # invoke syncdata service with authtoken in headers
 req_headers={'Cookie' : 'Authorization='+getAccessToken()}
-schema_resp=requests.get(schemaURL, headers=req_headers)
-print(schema_resp)
-schema_resp_1=schema_resp.json()
-schema_resp_2=schema_resp_1['response']
-
-identity_schema_id=schema_resp_2['id']
-cur_schema=schema_resp_2['schema']
+get_schema_resp=requests.get(schemaURL, headers=req_headers)
+print(get_schema_resp)
+schema_resp_json=get_schema_resp.json()
+schema_resp=schema_resp_json['response']
+identity_schema_id=schema_resp['id']
+cur_schema=schema_resp['schema']
 domain='registration-client'
 
 
