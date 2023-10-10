@@ -5,11 +5,11 @@ properties_file="$1"
 echo `date "+%m/%d/%Y %H:%M:%S"` ": $properties_file"
 if [ -f "$properties_file" ]
 then
-     echo `date "+%m/%d/%Y %H:%M:%S"` ": Property file \"$properties_file\" found."
+    echo `date "+%m/%d/%Y %H:%M:%S"` ": Property file \"$properties_file\" found."
     while IFS='=' read -r key value
     do
         key=$(echo $key | tr '.' '_')
-         eval ${key}=\${value}
+        eval ${key}=\${value}
     done < "$properties_file"
 else
      echo `date "+%m/%d/%Y %H:%M:%S"` ": Property file not found, Pass property file name as argument."

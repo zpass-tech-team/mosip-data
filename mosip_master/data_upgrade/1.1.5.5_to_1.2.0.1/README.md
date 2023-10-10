@@ -1,5 +1,12 @@
 ## Migrating country specific data from 1.1.5.5 to 1.2.0.1 version
 
+Prerequisites:
+-> SQL migration must be successfully executed.
+-> Go to upgrade.properties file and modify the property values as per the environment.
+
+Note: List of the commands executed during the data upgrade can be found in upgrade_commands.txt. One command per line. Commands using data-uploader.py script cannot be executed after it is successfully executed once. It should be commented for the next execution(upgrade.sh ignores the commented lines).
+
+
 1. Migration of dynamic field table data.
 	Dynamic value was stored as jsonarray in version 1.1.5*, now in 1.2.0.1 we store it as json object. one entry for each language of the field.
 
@@ -9,8 +16,12 @@
 
 	In 1.1.5* both Identity schema and UI spec was stored in identity_schema table. From 1.2.0 it is split into 2 different tables, identity_schema and ui_spec. As part of sql upgrade script data split is taken care.
 
-	Here, we take care of migration of old UI spec to new UI spec. It is recommended to verify the validators and visibility expressions in migrated UI SPEC.
+	Here, we take care of migrating old UI spec to new UI spec.
 	Ref: https://docs.mosip.io/1.2.0/modules/registration-client/registration-client-ui-specifications
+	-> It is recommended to verify the validators and visibility expressions in migrated UI SPEC.
+	-> After this migration, one old ui spec will be divided into 3 different ui spec like "newProcess", "updateProcess" and "lostProcess".
+	-> AGEGROUP_CONFIG in the upgrade.properties should be updated with respect to agegroup defined in the environment with the property name "mosip.regproc.packet.classifier.tagging.agegroup.ranges" in registration-default.properties file. 
+
 
 	Refer below API documentation to define and publish UI spec
 
