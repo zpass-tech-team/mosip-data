@@ -1,0 +1,101 @@
+name: Setup Postgresql & Run postgres_init for MOSIP_Master & Run docker container
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+  workflow_dispatch:
+    inputs:
+      message:
+        description: 'Message for manually triggering'
+        required: false
+        default: 'Triggered for Updates'
+        type: string
+  push:
+    branches:
+      - develop
+      - 1.2.0.1
+      - MOSIP*
+env:
+  DBUSER_PWD: mosip123
+  SU_USER_PWD: abc123
+jobs:
+  setup-and-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+      - name: Create Docker Network
+        run: docker network create mosip_network
+      - name: Setup PostgreSQL Container
+        run: |
+          docker run -d \
+            --name postgresql \
+            --network mosip_network \
+            -p 5432:5432 \
+            -e POSTGRES_USER=postgres \
+            -e POSTGRES_PASSWORD=${{ env.SU_USER_PWD }} \
+            -e POSTGRES_HOST_AUTH_METHOD=trust \
+            postgres:16
+      - name: Initialise mosip_master DB
+        run: |
+          docker run -itd \
+            --name mosip_master_container \
+            --network mosip_network \
+            -e MOSIP_DB_NAME=mosip_master \
+            -e DB_SERVERIP=postgresql \
+            -e DB_PORT=5432 \
+            -e SU_USER=postgres \
+            -e DML_FLAG=true \
+            -e GIT_REPO_URL=https://github.com/mosip/admin-services.git \
+            -e GIT_BRANCH=develop \
+            -e SU_USER_PWD=${{ env.SU_USER_PWD }} \
+            -e DBUSER_PWD=${{ env.DBUSER_PWD }} \
+            mosipdev/postgres-init:develop
+
+      - name: Check whether db_init has errors in Logs
+        run: |
+          if docker logs -f mosip_master_container | grep -q "ERROR"; then
+            echo "Error found in mosip_master_container logs."
+            exit 1
+          else
+            echo "No errors found in mosip_master_container logs."
+          fi
+
+      - name: docker ps command
+        run: docker ps -a
+      - name: Print Logs of mosip_master
+        run: |
+          # Display mosip_master_container logs
+          docker logs -f mosip_master_container
+      - name: Setup branch and env
+        run: |
+          # Strip git ref prefix from version
+          echo "BRANCH_NAME=$(echo ${{ github.ref }} | sed -e 's,.*/\(.*\),\1,')" >> $GITHUB_ENV
+          echo "GPG_TTY=$(tty)" >> $GITHUB_ENV
+      - name: Run masterdata-loader
+        run: |
+          docker run -itd \
+            --name masterdata_loader \
+            --network mosip_network \
+            -e DB_HOST=postgresql \
+            -e DB_USER=masteruser \
+            -e DB_PORT=5432 \
+            -e DB_PWD=${{ env.DBUSER_PWD }} \
+            -e xls_folder=mosip_master \
+            -e BRANCH=${{ env.BRANCH_NAME }} \
+            mosipdev/masterdata-loader:develop
+          
+      - name: Check whether masterdata_loader has errors in Logs
+        run: |
+          if docker logs -f masterdata_loader | grep -q "ERROR"; then
+            echo "Error found in masterdata_loader logs."
+            exit 1
+          else
+            echo "No errors found in masterdata_loader logs."
+          fi
+
+      - name: docker ps command
+        run: docker ps -a
+      - name: Print Logs of masterdata_loader
+        run: |
+          # Display masterdata_loader logs
+          docker logs -f masterdata_loader
