@@ -46,7 +46,7 @@ jobs:
             -e SU_USER=postgres \
             -e DML_FLAG=true \
             -e GIT_REPO_URL=https://github.com/mosip/admin-services.git \
-            -e GIT_BRANCH=develop \
+            -e GIT_BRANCH=release-1.2.1.x \
             -e SU_USER_PWD=${{ env.SU_USER_PWD }} \
             -e DBUSER_PWD=${{ env.DBUSER_PWD }} \
             mosipdev/postgres-init:develop
